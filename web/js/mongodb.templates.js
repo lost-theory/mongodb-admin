@@ -1,5 +1,6 @@
 MongoDB.templates = {
 	databases: function(data) {
+		$('#databases').append('<option />');
 		$(data.databases).each(function(idx, val) {
 			var option = $('<option />');
 			option.html(val);
@@ -9,12 +10,15 @@ MongoDB.templates = {
 		});
 		
 		$('#databases').change(function() {
-			MongoDB.getCollections(this.value, MongoDB.templates.collections);
+			if(this.value != '') {
+				MongoDB.getCollections(this.value, MongoDB.templates.collections);
+			}
 		});
 	},
 
 	collections: function(data) {
 		$('#collections').html('');
+		$('#collections').append('<option />');
 		$(data.collections).each(function(idx, val) {
 			var option = $('<option />');
 			option.html(val);
@@ -23,7 +27,9 @@ MongoDB.templates = {
 			$('#collections').append(option);
 		});
 		$('#collections').change(function() {
-			MongoDB.getDocuments(data.database, this.value, MongoDB.templates.documents);
+			if(this.value != '') {
+				MongoDB.getDocuments(data.database, this.value, MongoDB.templates.documents);
+			}
 		});
 	},
 
