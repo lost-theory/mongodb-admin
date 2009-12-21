@@ -21,14 +21,14 @@ class ComplexEncoder(json.JSONEncoder):
 	def default(self, obj):
 		# Handle MongoDB ObjectId
 		if isinstance(obj, ObjectId):
-			return obj.url_encode()
+			return str(obj)
 		# Datetime values
 		elif isinstance(obj, datetime.datetime):
 			return str(obj)
 		# DBRefs
 		elif isinstance(obj, DBRef):
 			return json.dumps({
-				'$id': obj.id.url_encode(), '$ns': obj.collection
+				'$id': str(obj.id), '$ns': obj.collection
 			})
 		return json.JSONEncoder.default(self, obj)
 
