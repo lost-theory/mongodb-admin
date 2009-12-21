@@ -2,8 +2,12 @@ from pymongo.connection import Connection
 from pymongo.objectid import ObjectId
 from pymongo.dbref import DBRef
 
+try:
+	import json
+except ImportError:
+	import simplejson as json
+
 import datetime
-import json
 import os
 
 import cherrypy
@@ -13,7 +17,7 @@ conn = Connection('127.0.0.1', pool_size=10)
 class ComplexEncoder(json.JSONEncoder):
 	"""Advise JSON encoder to encode some datatypes a special way.
 	"""
-	
+
 	def default(self, obj):
 		# Handle MongoDB ObjectId
 		if isinstance(obj, ObjectId):
@@ -36,13 +40,13 @@ class Root(object):
 	def default(self, *args, **kwargs):
 		"""Catch all requests.
 		"""
-		
+
 		# /db/ => show all collections of a database
 		if len(args) == 1:
 			db = args[0]
 			cursor = conn[db].collection_names()
 
-			# return collections in JSON			
+			# return collections in JSON
 			return json.dumps({
 				'database': db,
 				'collections': cursor,
@@ -51,13 +55,13 @@ class Root(object):
 		# /db/collection/ => show first 10 docs in collection
 		elif len(args) == 2:
 			db, coll = args
-			
+
 			# Supply filter as normal pymongo.collection.find() spec
 			if 'filter' in kwargs and len(kwargs['filter']) > 0:
 				filter = json.loads(kwargs['filter'])
 			else:
 				filter = {}
-			
+
 			cursor = conn[db][coll].find(filter)
 
 			# Sorting
@@ -81,11 +85,8 @@ class Root(object):
 			except:
 				skip = 0
 
-			# I'm shure there is a better way
-			docs = []
-			for doc in cursor:
-				docs.append(doc)
-			
+			docs = list(cursor)
+
 			# We got everything? Let's go
 			return json.dumps({
 				'database': db,
@@ -98,7 +99,7 @@ class Root(object):
 		# / => show all databases
 		else:
 			cursor = conn.database_names()
-			
+
 			return json.dumps({
 				'databases': cursor,
 				'total_rows': len(cursor)
@@ -121,5 +122,6 @@ conf = {'/_': {
 	])}
 }
 
-# Get cherrypy up and running
-cherrypy.quickstart(Root(), '/', config=conf)
+if __name__ == '__main__':
+	print "\nGo to http://127.0.0.1:8080/_/index.html to start.\n"
+	cherrypy.quickstart(Root(), '/', config=conf)
